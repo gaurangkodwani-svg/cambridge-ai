@@ -1,0 +1,48 @@
+# ==================== SECRETS ====================
+.env
+.env.*
+*.secret
+
+# ==================== PYTHON ====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ==================== VIRTUAL ENVIRONMENTS ====================
+.venv/
+venv/
+env/
+ENV/
+
+# ==================== DATABASE / USER DATA ====================
+database/*.json
+
+# ==================== UPLOADS (user-submitted files) ====================
+uploads/
+
+# ==================== LOGS ====================
+*.log
+logs/
+
+# ==================== OS ARTIFACTS ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================== EDITOR / IDE ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==================== PYTEST / COVERAGE ====================
+.pytest_cache/
+.coverage
+htmlcov/
