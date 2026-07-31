@@ -6,9 +6,6 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-if not GROQ_API_KEY:
-    raise RuntimeError("❌ GROQ_API_KEY not found in .env file")
-
 MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = """
@@ -29,6 +26,9 @@ Rules:
 """
 
 def _call_groq(user_prompt):
+    if not GROQ_API_KEY:
+        return "⚠️ The AI service is not configured yet. Set the GROQ_API_KEY environment variable in Vercel (Settings → Environment Variables)."
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
