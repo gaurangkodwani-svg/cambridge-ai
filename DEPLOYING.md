@@ -28,17 +28,18 @@ then every push to the main branch auto-deploys.
 {
   "version": 2,
   "builds": [
-    { "src": "backend/server.py", "use": "@vercel/python" }
+    { "src": "api/index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "backend/server.py" }
+    { "src": "/(.*)", "dest": "api/index.py" }
   ]
 }
 ```
 
-Vercel imports the WSGI `app` object from `backend/server.py` and installs
-`requirements.txt` automatically. The catch-all route sends every request
-(frontend + API) to the Flask app.
+Vercel imports the WSGI `app` object from `api/index.py` (which adds the
+`backend/` folder to the import path and re-exports the Flask app from
+`backend/server.py`), and installs `requirements.txt` automatically. The
+catch-all route sends every request (frontend + API) to the Flask app.
 
 ## 4. Deploy
 

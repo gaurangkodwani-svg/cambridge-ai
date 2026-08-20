@@ -49,12 +49,14 @@ try:
 except ImportError:
     PYMUPDF_AVAILABLE = False
 
-# ----------------------------------------------------------------------
-# Cloud OCR via Groq vision - uses the existing GROQ_API_KEY, no extra
-# service needed, and works on serverless (Vercel) without system binaries
-# ----------------------------------------------------------------------
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-CLOUD_OCR_AVAILABLE = bool(GROQ_API_KEY)
+def _get_groq_key() -> str:
+    return os.environ.get("GROQ_API_KEY", "")
+
+
+def _cloud_ocr_available() -> bool:
+    return bool(_get_groq_key())
+
+
 GROQ_OCR_MODEL = "llama-3.2-11b-vision-preview"
 
 
@@ -187,12 +189,12 @@ def _groq_vision_ocr(image_bytes: bytes, mime: str = "image/png") -> str:
     Extract text from a single image using Groq's vision model.
     Returns extracted text, or "" on any failure.
     """
-    if not CLOUD_OCR_AVAILABLE:
+    if not _cloud_ocr_available():
         return ""
 
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {_get_groq_key()}",
         "Content-Type": "application/json"
     }
     b64 = base64.b64encode(image_bytes).decode("utf-8")
@@ -237,7 +239,7 @@ def extract_text_from_image_groq(image_path: str) -> str:
     OCR an image file via Groq vision. Downscales large images first
     to stay within API payload limits.
     """
-    if not CLOUD_OCR_AVAILABLE or not PIL_AVAILABLE:
+    if not _cloud_ocr_available() or not PIL_AVAILABLE:
         return ""
 
     try:
@@ -257,7 +259,7 @@ def extract_text_ocr_groq(pdf_path: str) -> str:
     Render PDF pages to images with PyMuPDF (works without poppler,
     so it runs on Vercel) and OCR each page via Groq vision.
     """
-    if not (PYMUPDF_AVAILABLE and CLOUD_OCR_AVAILABLE):
+    if not (PYMUPDF_AVAILABLE and _cloud_ocr_available()):
         return ""
 
     text = ""
@@ -295,13 +297,14 @@ def extract_text(file_path: str) -> dict:
     Automatically decides whether to use standard or OCR extraction.
     Returns a dict with text, method used, and character count.
     """
+    cloud_ocr_on = _cloud_ocr_available()
     result = {
         "text": "",
         "method": "none",
         "char_count": 0,
         "success": False,
         "error": None,
-        "ocr_available": OCR_AVAILABLE or CLOUD_OCR_AVAILABLE
+        "ocr_available": OCR_AVAILABLE or cloud_ocr_on
     }
 
     file_path = str(file_path)
@@ -310,7 +313,7 @@ def extract_text(file_path: str) -> dict:
     # Handle image files directly
     if extension in [".png", ".jpg", ".jpeg", ".bmp", ".tiff"]:
         # Cloud OCR first (works on Vercel), then local Tesseract fallback
-        if CLOUD_OCR_AVAILABLE:
+        if cloud_ocr_on:
             result["text"] = extract_text_from_image_groq(file_path)
             result["method"] = "ocr_cloud_image"
 
@@ -347,7 +350,7 @@ def extract_text(file_path: str) -> dict:
         # Try OCR
         print("⚠️  Standard extraction failed or got too little text.")
 
-        if CLOUD_OCR_AVAILABLE:
+        if cloud_ocr_on:
             print("🔍 Switching to cloud OCR mode (Groq vision)...")
             ocr_text = extract_text_ocr_groq(file_path)
 
@@ -382,9 +385,10 @@ def get_ocr_status() -> dict:
     """
     Return the status of OCR capabilities.
     """
+    cloud_ocr_on = _cloud_ocr_available()
     status = {
-        "ocr_available": OCR_AVAILABLE or CLOUD_OCR_AVAILABLE,
-        "cloud_ocr_available": CLOUD_OCR_AVAILABLE,
+        "ocr_available": OCR_AVAILABLE or cloud_ocr_on,
+        "cloud_ocr_available": cloud_ocr_on,
         "tesseract_version": None,
         "supported_formats": ["PDF (text-based)", "TXT"]
     }
@@ -396,7 +400,7 @@ def get_ocr_status() -> dict:
         except Exception:
             pass
 
-    if CLOUD_OCR_AVAILABLE or OCR_AVAILABLE:
+    if cloud_ocr_on or OCR_AVAILABLE:
         status["supported_formats"] = [
             "PDF (text-based)",
             "PDF (scanned/image-based)",

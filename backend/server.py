@@ -140,7 +140,7 @@ def api_progress():
         if u["id"] == current_user.id:
             q = u.get("progress", {}).get("quizzes", [])
             return jsonify({"success": True, "total_quizzes": len(q), "quizzes": q})
-    return jsonify({"success": False})
+    return jsonify({"success": False, "error": "User not found"}), 401
 
 # 8. ROUTES - NOTES & OCR
 @app.route("/api/notes/upload", methods=["POST"])

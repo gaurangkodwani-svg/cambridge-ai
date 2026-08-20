@@ -6,7 +6,7 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
 You are an expert Cambridge International Examinations tutor.
@@ -26,12 +26,13 @@ Rules:
 """
 
 def _call_groq(user_prompt):
-    if not GROQ_API_KEY:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
         return "⚠️ The AI service is not configured yet. Set the GROQ_API_KEY environment variable in Vercel (Settings → Environment Variables)."
 
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
